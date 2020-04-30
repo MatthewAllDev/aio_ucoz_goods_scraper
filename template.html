@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ entry_title }}</title>
+</head>
+<body>
+<div style="width:49%;">
+    <table border="1">
+        <tbody>
+        <tr>
+            <td>Title:</td>
+            <td>{{ entry_title }}</td>
+        </tr>
+        <tr>
+            <td>Description:</td>
+            <td>{{ entry_description }}</td>
+        </tr>
+        <tr>
+            <td>Prise:</td>
+            <td>{{ entry_price.price }}</td>
+        </tr>
+        <tr>
+            <td>Prise in:</td>
+            <td>{{ entry_price_in.price }}</td>
+        </tr>
+        <tr>
+            <td>Old price:</td>
+            <td>{{ entry_price_old.price }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
