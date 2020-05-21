@@ -13,7 +13,6 @@ import config
 
 counter = 0
 goods_count = 0
-remove_after_parse = True
 
 
 def create_dir(dir_name: str):
@@ -51,14 +50,14 @@ def download_photo(dir_path: str, data: dict):
 
 
 def parse_goods(goods: dict, dir_path: str):
-    global counter, goods_count, remove_after_parse
+    global counter, goods_count
     for item in goods.values():
         folder_name = re.sub(r"[\/\:\*\?\"\<\>|]", '', item['entry_title'])
         new_path = create_dir(f"{dir_path}/{folder_name}")
         create_description_file(f"{new_path}/description", item)
         download_photo(f"{new_path}", item)
-        if remove_after_parse:
-            api.post('/shop/' + config.cat_uri, {'method': 'delete', 'id': item['entry_id']})
+        if config.remove_after_parse:
+            api.post('/shop/editgoods', {'method': 'delete', 'id': item['entry_id']})
         counter += 1
         progress = counter/goods_count
         sys.stdout.write(
