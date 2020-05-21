@@ -69,7 +69,7 @@ def parse_goods(goods: dict, dir_path: str):
 
 def get_goods(dir_path: str, page: int = 1):
     global goods_count
-    response = api.get('/shop/cat', {'cat_uri': 'arkhiv', 'pnum': page})
+    response = api.get('/shop/cat', {'cat_uri': config.cat_uri, 'pnum': page})
     try:
         response = response['success']
     except KeyError:
