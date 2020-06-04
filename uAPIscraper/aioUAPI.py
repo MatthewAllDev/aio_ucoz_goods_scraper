@@ -1,6 +1,6 @@
-# Python module for easy integration with uAPI (ucoz API).
+# Python async module for easy integration with uAPI (ucoz API).
 # author Ilya Matthew Kuvarzin <luceo2011@yandex.ru>
-# version 1.2 dated April 27, 2020
+# version 1.4 dated June 03, 2020
 
 from urllib.parse import quote_plus, urlencode
 from time import time
@@ -9,16 +9,17 @@ from random import randint
 from hashlib import md5
 import hmac
 from base64 import b64encode
-import requests
+import aiohttp
 
 
 class Request(object):
 
     def __init__(self, site: str, transfer_protocol: str, config: dict):
-        self.site = site
-        self.transfer_protocol = transfer_protocol
-        self.config = config
-        self.params = {
+        self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self.site: str = site
+        self.transfer_protocol: str = transfer_protocol
+        self.config: dict = config
+        self.params: dict = {
             'oauth_version': '1.0',
             'oauth_signature_method': 'HMAC-SHA1',
             'oauth_consumer_key': self.config['oauth_consumer_key'],
@@ -36,7 +37,7 @@ class Request(object):
         self.params['oauth_timestamp'] = int(time())
 
     @staticmethod
-    def __http_build_query(params: dict):
+    def __http_build_query(params: dict) -> str:
         return urlencode(dict(sorted(params.items())))
 
     @staticmethod
@@ -47,34 +48,39 @@ class Request(object):
             res = hmac.new(key.encode(), data.encode(), algorithm).hexdigest()
         return res
 
-    def get(self, url: str, data: dict = None) -> dict:
+    async def get(self, url: str, data: dict = None) -> dict:
+        if data is None:
+            data = {}
         self.__update_params()
         url = self.transfer_protocol + '://' + self.site + '/uapi' + url
         query_string = Request.__http_build_query(dict(self.params, **data, **{
             'oauth_signature': self.__get_signature('get', url, dict(self.params, **data))}))
-        request = url + '?' + query_string
-        response = requests.get(request).json()
-        return response
+        response = await self.session.get(url, params=query_string)
+        return await response.json()
 
-    def post(self, url: str, data: dict) -> dict:
+    async def post(self, url: str, data: dict) -> dict:
         self.__update_params()
         url = self.transfer_protocol + '://' + self.site + '/uapi' + url
-        response = requests.post(url, data=dict(self.params, **data, **{
-            'oauth_signature': self.__get_signature('post', url, dict(self.params, **data))})).json()
-        return response
+        response = await self.session.post(url, data=dict(self.params, **data, **{
+            'oauth_signature': self.__get_signature('post', url, dict(self.params, **data))}))
+        return await response.json()
 
-    def put(self, url: str, data: dict) -> dict:
+    async def put(self, url: str, data: dict) -> dict:
         self.__update_params()
         url = self.transfer_protocol + '://' + self.site + '/uapi' + url
-        response = requests.put(url, data=dict(self.params, **data, **{
-            'oauth_signature': self.__get_signature('put', url, dict(self.params, **data))})).json()
-        return response
+        response = await self.session.put(url, data=dict(self.params, **data, **{
+            'oauth_signature': self.__get_signature('put', url, dict(self.params, **data))}))
+        return await response.json()
 
-    def delete(self, url: str, data: dict) -> dict:
+    async def delete(self, url: str, data: dict = None) -> dict:
+        if data is None:
+            data = {}
         self.__update_params()
         url = self.transfer_protocol + '://' + self.site + '/uapi' + url
         query_string = Request.__http_build_query(dict(self.params, **data, **{
             'oauth_signature': self.__get_signature('delete', url, dict(self.params, **data))}))
-        request = url + '?' + query_string
-        response = requests.delete(request).json()
-        return response
+        response = await self.session.delete(url, params=query_string)
+        return await response.json()
+    
+    async def close_session(self):
+        await self.session.close()
