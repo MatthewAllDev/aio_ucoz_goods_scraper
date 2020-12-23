@@ -1,6 +1,6 @@
 # Python async module for easy integration with uAPI (ucoz API).
 # author Ilya Matthew Kuvarzin <luceo2011@yandex.ru>
-# version 1.4 dated June 03, 2020
+# version 1.5 dated Dec 23, 2020
 
 from urllib.parse import quote_plus, urlencode
 from time import time
@@ -53,9 +53,8 @@ class Request(object):
             data = {}
         self.__update_params()
         url = self.transfer_protocol + '://' + self.site + '/uapi' + url
-        query_string = Request.__http_build_query(dict(self.params, **data, **{
+        response = await self.session.get(url, params=dict(self.params, **data, **{
             'oauth_signature': self.__get_signature('get', url, dict(self.params, **data))}))
-        response = await self.session.get(url, params=query_string)
         return await response.json()
 
     async def post(self, url: str, data: dict) -> dict:
@@ -77,9 +76,8 @@ class Request(object):
             data = {}
         self.__update_params()
         url = self.transfer_protocol + '://' + self.site + '/uapi' + url
-        query_string = Request.__http_build_query(dict(self.params, **data, **{
+        response = await self.session.delete(url, params=dict(self.params, **data, **{
             'oauth_signature': self.__get_signature('delete', url, dict(self.params, **data))}))
-        response = await self.session.delete(url, params=query_string)
         return await response.json()
     
     async def close_session(self):
